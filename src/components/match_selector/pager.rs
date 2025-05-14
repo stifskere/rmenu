@@ -9,6 +9,7 @@ use sdl2::render::Canvas;
 use sdl2::ttf::Font;
 use sdl2::video::Window;
 
+use super::cursor::PagerCursor;
 use super::item::PagerItem;
 use crate::utils::errors::GenericComponentError;
 use crate::utils::vector_matrix::{Vector2, Vector2I, Vector2U};
@@ -59,6 +60,9 @@ impl<'f> Pager<'f> {
         self.computed_entries
             .clear();
 
+        const RIGHT_PAD: u32 = 150;
+        const LEFT_PAD: i32 = 10;
+
         let mut x_offset = 0;
         let mut current_page = Vec::new();
         for entry in &self.provided_entries {
@@ -69,14 +73,17 @@ impl<'f> Pager<'f> {
             let mut entry = PagerItem::new(self.font, &entry, self.text_color)?;
             let entry_size = entry.get_size();
 
-            if entry_size.x() + x_offset > self.rect.width() - 50 {
+            if entry_size.x() + x_offset > self.rect.width() - RIGHT_PAD {
                 self.computed_entries
                     .push(current_page);
                 current_page = Vec::new();
                 x_offset = 0;
             }
 
-            entry.set_position(Vector2::new(self.rect.x() + x_offset as i32, self.rect.y()));
+            entry.set_position(Vector2::new(
+                LEFT_PAD + self.rect.x() + x_offset as i32,
+                self.rect.y(),
+            ));
             entry.set_selected_background(self.select_color);
             entry.set_padding(Vector2::new(20, 0));
 
@@ -114,8 +121,22 @@ impl<'f> Pager<'f> {
     }
 
     #[inline]
-    pub fn is_caret_at_start(&self) -> bool {
+    pub const fn is_caret_at_start(&self) -> bool {
         self.caret_position == 0
+    }
+
+    #[inline]
+    pub(super) const fn caret_position(&self) -> usize {
+        self.caret_position
+    }
+
+    #[inline]
+    pub(super) const fn computed_entries(&self) -> &Vec<Vec<PagerItem>> {
+        &self.computed_entries
+    }
+
+    pub fn get_selected_entry(&self) -> Option<PagerCursor> {
+        PagerCursor::from_instance(self)
     }
 
     #[inline]
@@ -155,33 +176,59 @@ impl<'f> Pager<'f> {
             .set_height(size.y());
     }
 
-    pub fn get_selected_entry(&self) -> Option<(&Vec<PagerItem>, &PagerItem)> {
-        let mut count = 0;
+    pub fn draw(&self, renderer: &mut Canvas<Window>) -> Result<(), GenericComponentError> {
+        let Some(selected) = self.get_selected_entry() else { return Ok(()) };
 
-        for (page_index, page) in self
-            .computed_entries
-            .iter()
-            .enumerate()
-        {
-            if self.caret_position < count + page.len() {
-                let page = self
-                    .computed_entries
-                    .get(page_index)?;
+        let arrow_colors = Color::RGB(
+            (self.text_color.r as f32 * 0.9) as u8,
+            (self.text_color.g as f32 * 0.9) as u8,
+            (self.text_color.b as f32 * 0.9) as u8
+        );
 
-                return Some((page, page.get(self.caret_position - count)?));
-            }
+        let texture_creator = renderer.texture_creator();
 
-            count += page.len();
+        if selected.page_index() > 0 {
+            let arrow_left = self.font
+                .render_char('<')
+                .blended(arrow_colors)?;
+
+            let arrow_left_texture = texture_creator
+                .create_texture_from_surface(arrow_left)?;
+
+            renderer.copy(
+                &arrow_left_texture,
+                None,
+                Some(Rect::new(
+                    self.rect.x(),
+                    self.rect.y(),
+                    5,
+                    self.rect.height()
+                ))
+            )?;
         }
 
-        None
-    }
+        if selected.page_index() < self.computed_entries.len() - 1 {
+            let arrow_right = self.font
+                .render_char('>')
+                .blended(arrow_colors)?;
 
-    pub fn draw(&self, renderer: &mut Canvas<Window>) -> Result<(), GenericComponentError> {
-        if let Some((page, selected_entry)) = self.get_selected_entry() {
-            for entry in page {
-                entry.draw(renderer, ptr_eq(entry, selected_entry))?;
-            }
+            let arrow_right_texture = texture_creator
+                .create_texture_from_surface(arrow_right)?;
+
+            renderer.copy(
+                &arrow_right_texture,
+                None,
+                Some(Rect::new(
+                    self.rect.x() + self.rect.width() as i32 - 20,
+                    self.rect.y(),
+                    5,
+                    self.rect.height()
+                ))
+            )?;
+        }
+
+        for entry in selected.page() {
+            entry.draw(renderer, ptr_eq(entry, selected.item()))?;
         }
 
         Ok(())

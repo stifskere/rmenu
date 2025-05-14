@@ -106,8 +106,8 @@ fn main() {
 
                     Keycode::Tab => {
                         if !in_args {
-                            if let Some((_, selected)) = pager.get_selected_entry() {
-                                input.set_text(selected.get_original_text());
+                            if let Some(selected) = pager.get_selected_entry() {
+                                input.set_text(selected.item().get_original_text());
                             }
                         }
                     },
@@ -116,9 +116,9 @@ fn main() {
                         let input_args = input.get_args();
 
                         let mut command = match pager.get_selected_entry() {
-                            Some((_, selected)) if input_args.len() <= 1 => {
-                                info!("Requesting to start '{}'", selected.get_original_text());
-                                Command::new(selected.get_original_text())
+                            Some(selected) if input_args.len() <= 1 => {
+                                info!("Requesting to start '{}'", selected.item().get_original_text());
+                                Command::new(selected.item().get_original_text())
                             },
 
                             _ => {
