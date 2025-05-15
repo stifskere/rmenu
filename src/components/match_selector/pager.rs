@@ -182,38 +182,38 @@ impl<'f> Pager<'f> {
         let arrow_colors = Color::RGB(
             (self.text_color.r as f32 * 0.9) as u8,
             (self.text_color.g as f32 * 0.9) as u8,
-            (self.text_color.b as f32 * 0.9) as u8
+            (self.text_color.b as f32 * 0.9) as u8,
         );
 
         let texture_creator = renderer.texture_creator();
 
         if selected.page_index() > 0 {
-            let arrow_left = self.font
+            let arrow_left = self
+                .font
                 .render_char('<')
                 .blended(arrow_colors)?;
 
-            let arrow_left_texture = texture_creator
-                .create_texture_from_surface(arrow_left)?;
+            let arrow_left_texture = texture_creator.create_texture_from_surface(arrow_left)?;
 
             renderer.copy(
                 &arrow_left_texture,
                 None,
-                Some(Rect::new(
-                    self.rect.x(),
-                    self.rect.y(),
-                    5,
-                    self.rect.height()
-                ))
+                Some(Rect::new(self.rect.x(), self.rect.y(), 5, self.rect.height())),
             )?;
         }
 
-        if selected.page_index() < self.computed_entries.len() - 1 {
-            let arrow_right = self.font
+        if selected.page_index()
+            < self
+                .computed_entries
+                .len()
+                - 1
+        {
+            let arrow_right = self
+                .font
                 .render_char('>')
                 .blended(arrow_colors)?;
 
-            let arrow_right_texture = texture_creator
-                .create_texture_from_surface(arrow_right)?;
+            let arrow_right_texture = texture_creator.create_texture_from_surface(arrow_right)?;
 
             renderer.copy(
                 &arrow_right_texture,
@@ -222,8 +222,8 @@ impl<'f> Pager<'f> {
                     self.rect.x() + self.rect.width() as i32 - 20,
                     self.rect.y(),
                     5,
-                    self.rect.height()
-                ))
+                    self.rect.height(),
+                )),
             )?;
         }
 

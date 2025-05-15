@@ -1,19 +1,21 @@
-use std::{env::var, fs::{read_to_string, write as fs_write}, io::Error as IoError, path::Path};
+use std::env::var;
+use std::fs::{read_to_string, write as fs_write};
+use std::io::Error as IoError;
+use std::path::Path;
 
+use log::{info, warn};
 use thiserror::Error;
 use toml_edit::{DocumentMut, Item as TomlItem, TomlError};
-use log::{info, warn};
-
-use crate::config::enums::ConfigNumber;
 
 use super::enums::{ConfigColor, ConfigValueError, ConfigVector2, WindowPosition};
+use crate::config::enums::ConfigNumber;
 
 #[derive(Error, Debug)]
 pub enum ConfigError {
     #[error("Invalid value '{key}' {message:#}.")]
     InvalidValue {
         key: &'static str,
-        message: ConfigValueError
+        message: ConfigValueError,
     },
 
     #[error("Io error occurred: {0:#}")]
@@ -23,7 +25,7 @@ pub enum ConfigError {
     Toml(#[from] TomlError),
 
     #[error("Invalid path '{path}', not a file")]
-    NotAFile{ path: String }
+    NotAFile { path: String },
 }
 
 pub struct Config {
@@ -48,13 +50,12 @@ pub struct Config {
 
     // The color of the cursor in the command
     // completion right menu.
-    selection_color: ConfigColor
+    selection_color: ConfigColor,
 }
 
 impl Config {
     pub fn load() -> Result<Self, ConfigError> {
-        let string_config_path = var("RMENU_CONFIG_PATH")
-            .unwrap_or("./.rmenu.toml".into());
+        let string_config_path = var("RMENU_CONFIG_PATH").unwrap_or("./.rmenu.toml".into());
         let config_path = Path::new(&string_config_path);
 
         if config_path.is_dir() {
@@ -63,7 +64,10 @@ impl Config {
 
         if !config_path.exists() {
             fs_write(config_path, include_str!("../../assets/default_config.toml"))?;
-            warn!("A configuration file at '{string_config_path}' could not be found, it was created.");
+            warn!(
+                "A configuration file at '{string_config_path}' could not be found, it was \
+                 created."
+            );
         }
 
         read_to_string(config_path)?
@@ -140,7 +144,7 @@ impl TryFrom<DocumentMut> for Config {
 
             text_color: handle_value!(text_color: ConfigColor | ConfigColor::new(255, 255, 255)),
             selection_color: handle_value!(selection_color: ConfigColor | ConfigColor::new(102, 102, 102)),
-            background_color: handle_value!(background_color: ConfigColor | ConfigColor::new(41, 41, 41))
+            background_color: handle_value!(background_color: ConfigColor | ConfigColor::new(41, 41, 41)),
         })
     }
 }

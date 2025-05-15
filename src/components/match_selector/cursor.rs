@@ -1,11 +1,12 @@
-use super::{item::PagerItem, pager::Pager};
+use super::item::PagerItem;
+use super::pager::Pager;
 
 pub struct PagerCursor<'i> {
     page_index: usize,
     page: &'i Vec<PagerItem<'i>>,
 
     item_index: usize,
-    item: &'i PagerItem<'i>
+    item: &'i PagerItem<'i>,
 }
 
 impl<'i> PagerCursor<'i> {
@@ -25,7 +26,7 @@ impl<'i> PagerCursor<'i> {
                     page_index,
 
                     item: page.get(item_index)?,
-                    item_index
+                    item_index,
                 });
             }
 

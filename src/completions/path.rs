@@ -20,9 +20,11 @@ pub fn get_nushell_path() -> Option<OsString> {
         .output()
         .ok()?; // if nu is not installed simply do nothing about it.
 
-    if output.status.success() {
-        let path_str = String::from_utf8_lossy(&output.stdout)
-            .to_string();
+    if output
+        .status
+        .success()
+    {
+        let path_str = String::from_utf8_lossy(&output.stdout).to_string();
 
         info!("Nushell found, sourcing $env.PATH");
 
