@@ -3,6 +3,7 @@ use std::process::{Command, Stdio};
 use completions::path::get_path_programs;
 use components::match_selector::pager::Pager;
 use components::text_input::TextInput;
+use config::loader::Config;
 use flexi_logger::{Logger, colored_default_format};
 use log::info;
 use sdl2::event::Event;
@@ -18,6 +19,7 @@ use utils::vector_matrix::{Vector2I, Vector2U};
 
 mod completions;
 mod components;
+mod config;
 mod utils;
 
 fn main() {
@@ -35,6 +37,8 @@ fn main() {
     let display_bounds = handle_app_error!(video_subsystem.display_bounds(0));
 
     info!("Initialized SDL2 {}", sdl2_version());
+
+    Config::load().unwrap();
 
     let window_rect =
         Rect::new(0, -(display_bounds.height() as i32 / 2), display_bounds.width(), 20);
