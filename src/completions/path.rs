@@ -1,26 +1,53 @@
 use std::collections::HashSet;
 use std::env::{split_paths, var_os};
+use std::ffi::OsString;
 use std::fs::read_dir;
 use std::io::Error as IoError;
+use std::process::Command;
 
 use log::info;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum PathError {
-    #[error("The PATH variable is not present.")]
-    VarNotFound,
-
     #[error("A problem occurred while reading files from a path.")]
     IoError(#[from] IoError),
+}
+
+pub fn get_nushell_path() -> Option<OsString> {
+    let output = Command::new("nu")
+        .args(&["--commands", r#"echo ($env.PATH | str join ":")"#])
+        .output()
+        .ok()?; // if nu is not installed simply do nothing about it.
+
+    if output.status.success() {
+        let path_str = String::from_utf8_lossy(&output.stdout)
+            .to_string();
+
+        info!("Nushell found, sourcing $env.PATH");
+
+        if !path_str.is_empty() {
+            return Some(OsString::from(path_str));
+        }
+    }
+
+    None
 }
 
 pub fn get_path_programs() -> Result<HashSet<String>, PathError> {
     let mut programs = HashSet::new();
 
-    let path = var_os("PATH").ok_or(PathError::VarNotFound)?;
+    let mut paths = HashSet::new();
 
-    for path in split_paths(&path) {
+    if let Some(system_path) = var_os("PATH") {
+        paths.extend(split_paths(&system_path));
+    }
+
+    if let Some(nu_path) = get_nushell_path() {
+        paths.extend(split_paths(&nu_path));
+    }
+
+    for path in paths {
         if let Ok(entries) = read_dir(&path) {
             for entry in entries.flatten() {
                 if entry
