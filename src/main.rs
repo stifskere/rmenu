@@ -5,8 +5,9 @@ use components::match_selector::pager::Pager;
 use components::text_input::TextInput;
 use config::loader::Config;
 use flexi_logger::{Logger, colored_default_format};
-use log::info;
+use log::{error, info, warn};
 use sdl2::event::Event;
+use sdl2::gfx::primitives::DrawRenderer;
 use sdl2::init as sdl2_init;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
@@ -36,37 +37,110 @@ fn main() {
     let video_subsystem = handle_app_error!(sdl_context.video());
     let display_bounds = handle_app_error!(video_subsystem.display_bounds(0));
 
-    info!("Initialized SDL2 {}", sdl2_version());
-
-    Config::load().unwrap();
-
-    let window_rect =
-        Rect::new(0, -(display_bounds.height() as i32 / 2), display_bounds.width(), 20);
-
-    let window = handle_app_error!(
-        video_subsystem
-            .window("r-menu", window_rect.width(), window_rect.height())
-            .position(window_rect.x(), window_rect.y())
-            .borderless()
-            .build()
-    );
-
-    info!("Started window, requested: {window_rect:?}");
-
-    let mut canvas = handle_app_error!(
-        window
-            .into_canvas()
-            .present_vsync()
-            .build()
-            .map_err(|e| e.to_string())
-    );
-
-    let texture_creator = canvas.texture_creator();
-
     let font = handle_app_error!(ttf_context.load_font_from_rwops(
         handle_app_error!(RWops::from_bytes(include_bytes!("../assets/OpenSans-Regular.ttf"))),
         14
     ));
+
+    macro_rules! window {
+        ([$x:expr, $y:expr], [$width:expr, $height:expr]) => {
+            video_subsystem
+                .window("r-menu", $width, $height)
+                .position($x, $y)
+                .borderless()
+                .always_on_top()
+                .build()
+        };
+    }
+
+    macro_rules! canvas {
+        ($window:expr) => {
+            $window
+                .into_canvas()
+                .present_vsync()
+                .build()
+                .map_err(|e| e.to_string())
+        };
+    }
+
+    info!("Initialized SDL2 {}", sdl2_version());
+
+    let window_rect =
+        Rect::new(0, -(display_bounds.height() as i32 / 2), display_bounds.width(), 20);
+
+    let config = match Config::load(){
+        Ok(config) => config,
+        Err(err) => {
+            // This branch opens a window with default configuration,
+            // and this window is used to display a configuration error,
+            // so the user doesn't need to checkout logs every time.
+
+            let window = handle_app_error!(
+                window!(
+                    [window_rect.x(), window_rect.y()],
+                    [window_rect.width(), window_rect.height()]
+                )
+            );
+
+            warn!("Error detected. Error window opened");
+            error!("{err:#}");
+
+            let mut canvas = handle_app_error!(canvas!(window));
+            let texture_creator = canvas.texture_creator();
+            let error_text_surface = handle_app_error!(
+                font
+                    .render(&format!("{err:#} | Press <ESC> or <RETURN> to exit."))
+                    .blended(Color::RED)
+            );
+            let error_text_texture = handle_app_error!(
+                texture_creator.create_texture_from_surface(&error_text_surface)
+            );
+
+            let mut event_pump = handle_app_error!(sdl_context.event_pump());
+            'event_loop: loop {
+                for event in event_pump.poll_iter() {
+                    if let Event::KeyDown { keycode: Some(Keycode::Escape | Keycode::Return), .. } = event {
+                        break 'event_loop;
+                    }
+                }
+
+                canvas.set_draw_color(Color::RGB(20, 20, 20));
+                canvas.clear();
+
+                handle_app_error!(
+                    canvas.filled_circle(10, 10, 5, Color::RED)
+                );
+
+                handle_app_error!(canvas.copy(
+                    &error_text_texture,
+                    None,
+                    Some(Rect::new(
+                        25,
+                        0,
+                        error_text_surface.width(),
+                        error_text_surface.height()
+                    ))
+                ));
+
+                canvas.present();
+            }
+
+            return;
+        }
+    };
+
+    let window = handle_app_error!(
+        window!(
+            [window_rect.x(), window_rect.y()],
+            [window_rect.width(), window_rect.height()]
+        )
+    );
+
+    info!("Started window, requested: {window_rect:?}");
+
+    let mut canvas = handle_app_error!(canvas!(window));
+
+    let texture_creator = canvas.texture_creator();
 
     let mut input = TextInput::new(&font);
     input.set_color(Color::WHITE);

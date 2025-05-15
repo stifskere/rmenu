@@ -6,6 +6,6 @@ edition = "2024"
 [dependencies]
 flexi_logger = "0.30.1"
 log = "0.4.27"
-sdl2 = { version = "0.37.0", features = ["ttf"] }
+sdl2 = { version = "0.37.0", features = ["ttf", "gfx"] }
 thiserror = "2.0.12"
 toml_edit = "0.22.26"

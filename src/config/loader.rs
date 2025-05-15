@@ -12,7 +12,7 @@ use crate::config::enums::ConfigNumber;
 
 #[derive(Error, Debug)]
 pub enum ConfigError {
-    #[error("Invalid value '{key}' {message:#}.")]
+    #[error("Invalid configuration entry '{key}': {message:#}.")]
     InvalidValue {
         key: &'static str,
         message: ConfigValueError,

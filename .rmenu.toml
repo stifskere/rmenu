@@ -4,7 +4,7 @@
 # has is to provide a bar, use picom for border radius...
 
 # The launcher position, top or bottom.
-position = "top"
+position = "to"
 
 # The launcher separation from the screen borders [x, y].
 padding = [0, 0]

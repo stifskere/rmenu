@@ -17,7 +17,7 @@ macro_rules! conf_err {
 fn join_possible(possible: &[&'static str]) -> String {
     let possible = possible.join(",");
     match possible.rfind(',') {
-        Some(pos) => format!("{} or{}", &possible[..pos], &possible[pos + 1..]),
+        Some(pos) => format!("{} or {}", &possible[..pos], &possible[pos + 1..]),
         None => possible,
     }
 }
