@@ -8,6 +8,8 @@ position = "top"
 
 # The launcher separation from the screen borders [x, y].
 padding = [0, 0]
+
+# The launcher window height.
 height = 6
 
 # The launcher background color.
