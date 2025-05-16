@@ -72,7 +72,10 @@ pub struct Config {
 
 impl Config {
     pub fn load() -> Result<Self, ConfigError> {
-        let string_config_path = var("RMENU_CONFIG_PATH").unwrap_or("./.rmenu.toml".into());
+        let string_config_path = var("RMENU_CONFIG_PATH")
+            .unwrap_or("./.rmenu.toml".into());
+        info!("Read 'RMENU_CONFIG_PATH', found value '{string_config_path}'");
+
         let config_path = Path::new(&string_config_path);
 
         if config_path.is_dir() {

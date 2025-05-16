@@ -43,4 +43,10 @@ selection_color = 0x666666
 #
 # If starting the program from your window manager the path
 # will be usually $HOME.
-font_path = "./default_font.ttf"
+#
+# This will not error, it will default to the fallback
+# font instead, if you don't see your font loaded, start
+# the app from a terminal and read the logs for more information.
+#
+# This is due to SDL2 litations on lifetimes.
+font_path = "./change_me.ttf"

@@ -25,10 +25,10 @@ mod utils;
 
 fn main() {
     Logger::try_with_str("DEBUG")
-        .expect("Couldn't start logger")
+        .expect("To start logger with DEBUG.")
         .format(colored_default_format)
         .start()
-        .unwrap();
+        .expect("To start logger.");
 
     info!("Staring r-menu version {}", env!("CARGO_PKG_VERSION"));
 
