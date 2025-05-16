@@ -4,11 +4,20 @@ use std::io::Error as IoError;
 use std::path::Path;
 
 use log::{info, warn};
+use sdl2::pixels::Color;
+use sdl2::ttf::InitError as TTFInitError;
 use thiserror::Error;
 use toml_edit::{DocumentMut, Item as TomlItem, TomlError};
 
-use super::enums::{ConfigColor, ConfigValueError, ConfigVector2, WindowPosition};
-use crate::config::enums::ConfigNumber;
+use super::types::{
+    ConfigColor,
+    ConfigNumber,
+    ConfigString,
+    ConfigValueError,
+    ConfigVector2,
+    WindowPosition,
+};
+use crate::utils::vector_matrix::Vector2F;
 
 #[derive(Error, Debug)]
 pub enum ConfigError {
@@ -24,8 +33,11 @@ pub enum ConfigError {
     #[error("Toml parse error: {0:#}")]
     Toml(#[from] TomlError),
 
-    #[error("Invalid path '{path}', not a file")]
-    NotAFile { path: String },
+    #[error("Invalid path '{path}' as {path_use}, not a file")]
+    NotAFile { path: String, path_use: String },
+
+    #[error("TTF init error: {0:#}")]
+    TTFError(#[from] TTFInitError),
 }
 
 pub struct Config {
@@ -38,7 +50,7 @@ pub struct Config {
     // depending on the set window position.
     padding: ConfigVector2,
 
-    /// The launcher bar height.
+    // The launcher bar height.
     height: ConfigNumber,
 
     // The whole window color.
@@ -51,6 +63,11 @@ pub struct Config {
     // The color of the cursor in the command
     // completion right menu.
     selection_color: ConfigColor,
+
+    // The window rendering font path,
+    // the font must be read by the function
+    // user.
+    font_path: Option<ConfigString>,
 }
 
 impl Config {
@@ -59,7 +76,10 @@ impl Config {
         let config_path = Path::new(&string_config_path);
 
         if config_path.is_dir() {
-            return Err(ConfigError::NotAFile { path: string_config_path });
+            return Err(ConfigError::NotAFile {
+                path: string_config_path,
+                path_use: "config file".into(),
+            });
         }
 
         if !config_path.exists() {
@@ -81,28 +101,37 @@ impl Config {
     }
 
     #[inline]
-    pub const fn padding(&self) -> &ConfigVector2 {
-        &self.padding
+    pub fn padding(&self) -> Vector2F {
+        self.padding.into()
     }
 
     #[inline]
-    pub const fn height(&self) -> &ConfigNumber {
-        &self.height
+    pub fn height(&self) -> f64 {
+        self.height.into()
     }
 
     #[inline]
-    pub const fn background_color(&self) -> &ConfigColor {
-        &self.background_color
+    pub fn background_color(&self) -> Color {
+        self.background_color
+            .into()
     }
 
     #[inline]
-    pub const fn text_color(&self) -> &ConfigColor {
-        &self.text_color
+    pub fn text_color(&self) -> Color {
+        self.text_color
+            .into()
     }
 
     #[inline]
-    pub const fn selection_color(&self) -> &ConfigColor {
-        &self.selection_color
+    pub fn selection_color(&self) -> Color {
+        self.selection_color
+            .into()
+    }
+
+    pub fn font_path(&self) -> Option<String> {
+        self.font_path
+            .as_ref()
+            .map(|s| s.to_string())
     }
 }
 
@@ -145,6 +174,14 @@ impl TryFrom<DocumentMut> for Config {
             text_color: handle_value!(text_color: ConfigColor | ConfigColor::new(255, 255, 255)),
             selection_color: handle_value!(selection_color: ConfigColor | ConfigColor::new(102, 102, 102)),
             background_color: handle_value!(background_color: ConfigColor | ConfigColor::new(41, 41, 41)),
+
+            font_path: Some(
+                handle_value!(font_path: ConfigString | ConfigString::new(String::new())),
+            )
+            .take_if(|p| {
+                !p.as_str()
+                    .is_empty()
+            }),
         })
     }
 }

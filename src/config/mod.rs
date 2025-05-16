@@ -1,2 +1,2 @@
-pub mod enums;
 pub mod loader;
+pub mod types;

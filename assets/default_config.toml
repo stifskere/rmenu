@@ -1,20 +1,46 @@
+## RMENU CONFIGURATION
 
 # This configuration doesn't handle border radius, glow
 # or transparency, as the only responsability this program
 # has is to provide a launcher bar.
 
+## POSITIONS
+
 # The launcher position, top or bottom.
 position = "top"
 
-# The launcher separation from the screen borders [x, y].
+# The launcher separation from the screen borders.
+#
+# The type is a vector represented as a matrix
+# or size 2 array [x, y].
 padding = [0, 0]
 
 # The launcher window height.
+#
+# The width is always 100% of the screen
+# you can modify it using the `padding.x` value.
 height = 6
+
+## BAR COLORS
+
+# All the bar colors have the same type, you
+# may use an array of size 3 ([r, g, b]) or
+# an hexadecimal value 0xRRGGBB.
 
 # The launcher background color.
 background_color = 0x292929
+
 # The launcher general text color.
 text_color = 0xFFFFFF
+
 # The launcher entry selection color.
 selection_color = 0x666666
+
+## MISC CONFIGURATION
+
+# The application font, a system path, `$(pwd)` is the path
+# from where you started the program.
+#
+# If starting the program from your window manager the path
+# will be usually $HOME.
+font_path = "./default_font.ttf"

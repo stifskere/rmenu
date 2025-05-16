@@ -37,8 +37,8 @@ fn main() {
     let video_subsystem = handle_app_error!(sdl_context.video());
     let display_bounds = handle_app_error!(video_subsystem.display_bounds(0));
 
-    let font = handle_app_error!(ttf_context.load_font_from_rwops(
-        handle_app_error!(RWops::from_bytes(include_bytes!("../assets/OpenSans-Regular.ttf"))),
+    let default_font = handle_app_error!(ttf_context.load_font_from_rwops(
+        handle_app_error!(RWops::from_bytes(include_bytes!("../assets/default_font.ttf"))),
         14
     ));
 
@@ -68,19 +68,17 @@ fn main() {
     let window_rect =
         Rect::new(0, -(display_bounds.height() as i32 / 2), display_bounds.width(), 20);
 
-    let config = match Config::load(){
+    let config = match Config::load() {
         Ok(config) => config,
         Err(err) => {
             // This branch opens a window with default configuration,
             // and this window is used to display a configuration error,
             // so the user doesn't need to checkout logs every time.
 
-            let window = handle_app_error!(
-                window!(
-                    [window_rect.x(), window_rect.y()],
-                    [window_rect.width(), window_rect.height()]
-                )
-            );
+            let window = handle_app_error!(window!(
+                [window_rect.x(), window_rect.y()],
+                [window_rect.width(), window_rect.height()]
+            ));
 
             warn!("Error detected. Error window opened");
             error!("{err:#}");
@@ -88,18 +86,21 @@ fn main() {
             let mut canvas = handle_app_error!(canvas!(window));
             let texture_creator = canvas.texture_creator();
             let error_text_surface = handle_app_error!(
-                font
+                default_font
                     .render(&format!("{err:#} | Press <ESC> or <RETURN> to exit."))
                     .blended(Color::RED)
             );
-            let error_text_texture = handle_app_error!(
-                texture_creator.create_texture_from_surface(&error_text_surface)
-            );
+            let error_text_texture =
+                handle_app_error!(texture_creator.create_texture_from_surface(&error_text_surface));
 
             let mut event_pump = handle_app_error!(sdl_context.event_pump());
             'event_loop: loop {
                 for event in event_pump.poll_iter() {
-                    if let Event::KeyDown { keycode: Some(Keycode::Escape | Keycode::Return), .. } = event {
+                    if let Event::KeyDown {
+                        keycode: Some(Keycode::Escape | Keycode::Return),
+                        ..
+                    } = event
+                    {
                         break 'event_loop;
                     }
                 }
@@ -107,34 +108,27 @@ fn main() {
                 canvas.set_draw_color(Color::RGB(20, 20, 20));
                 canvas.clear();
 
-                handle_app_error!(
-                    canvas.filled_circle(10, 10, 5, Color::RED)
-                );
+                handle_app_error!(canvas.filled_circle(10, 10, 5, Color::RED));
 
                 handle_app_error!(canvas.copy(
                     &error_text_texture,
                     None,
-                    Some(Rect::new(
-                        25,
-                        0,
-                        error_text_surface.width(),
-                        error_text_surface.height()
-                    ))
+                    Some(Rect::new(25, 0, error_text_surface.width(), error_text_surface.height()))
                 ));
 
                 canvas.present();
             }
 
             return;
-        }
+        },
     };
 
-    let window = handle_app_error!(
-        window!(
-            [window_rect.x(), window_rect.y()],
-            [window_rect.width(), window_rect.height()]
-        )
-    );
+    // TODO: load default font in here and apply config
+
+    let window = handle_app_error!(window!(
+        [window_rect.x(), window_rect.y()],
+        [window_rect.width(), window_rect.height()]
+    ));
 
     info!("Started window, requested: {window_rect:?}");
 
@@ -142,7 +136,7 @@ fn main() {
 
     let texture_creator = canvas.texture_creator();
 
-    let mut input = TextInput::new(&font);
+    let mut input = TextInput::new(&default_font);
     input.set_color(Color::WHITE);
     input.set_position(Vector2I::new(0, 0));
 
@@ -152,7 +146,7 @@ fn main() {
         handle_app_error!(get_path_programs())
             .into_iter()
             .collect(),
-        &font,
+        &default_font,
     );
     pager.set_position(Vector2I::new(minus_a_quarter_window as i32, 0));
     pager.set_size(Vector2U::new(

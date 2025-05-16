@@ -2,15 +2,15 @@ use sdl2::pixels::Color;
 use thiserror::Error;
 use toml_edit::Item as TomlItem;
 
-use crate::utils::vector_matrix::{Vector2, Vector2I};
+use crate::utils::vector_matrix::{Vector2, Vector2F};
 
 macro_rules! conf_err {
     (expected types: $($ty:ty),*) => {
-        $crate::config::enums::ConfigValueError::InvalidType { possible_types: vec![$(stringify!($ty)),*] }
+        $crate::config::types::ConfigValueError::InvalidType { possible_types: vec![$(stringify!($ty)),*] }
     };
 
     (expected values: $($val:literal),*) => {
-        $crate::config::enums::ConfigValueError::InvalidValue { possible: vec![$($val),*] }
+        $crate::config::types::ConfigValueError::InvalidValue { possible: vec![$($val),*] }
     }
 }
 
@@ -43,21 +43,24 @@ pub enum WindowPosition {
     Bottom,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ConfigVector2 {
     x: f64,
     y: f64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ConfigColor {
     r: u8,
     g: u8,
     b: u8,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct ConfigNumber(f64);
+
+#[derive(Debug, Clone)]
+pub struct ConfigString(String);
 
 impl TryFrom<TomlItem> for WindowPosition {
     type Error = ConfigValueError;
@@ -121,9 +124,9 @@ impl TryFrom<TomlItem> for ConfigVector2 {
     }
 }
 
-impl Into<Vector2I> for ConfigVector2 {
-    fn into(self) -> Vector2I {
-        Vector2::new(self.x as i32, self.y as i32)
+impl Into<Vector2F> for ConfigVector2 {
+    fn into(self) -> Vector2F {
+        Vector2::new(self.x as f32, self.y as f32)
     }
 }
 
@@ -207,5 +210,34 @@ impl TryFrom<TomlItem> for ConfigNumber {
 impl Into<f64> for ConfigNumber {
     fn into(self) -> f64 {
         self.0
+    }
+}
+
+impl ConfigString {
+    #[inline]
+    pub const fn new(value: String) -> Self {
+        Self(value)
+    }
+
+    #[inline]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl TryFrom<TomlItem> for ConfigString {
+    type Error = ConfigValueError;
+
+    fn try_from(value: TomlItem) -> Result<Self, Self::Error> {
+        value
+            .as_str()
+            .map(|s| Self(s.to_string()))
+            .ok_or(conf_err!(expected types: String))
+    }
+}
+
+impl ToString for ConfigString {
+    fn to_string(&self) -> String {
+        self.0.clone()
     }
 }
