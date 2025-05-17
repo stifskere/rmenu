@@ -4,6 +4,7 @@ use completions::path::get_path_programs;
 use components::match_selector::pager::Pager;
 use components::text_input::TextInput;
 use config::loader::Config;
+use config::types::WindowPosition;
 use flexi_logger::{Logger, colored_default_format};
 use log::{error, info, warn};
 use sdl2::event::Event;
@@ -34,8 +35,18 @@ fn main() {
 
     let sdl_context = handle_app_error!(sdl2_init());
     let ttf_context = handle_app_error!(ttf_init());
+
     let video_subsystem = handle_app_error!(sdl_context.video());
-    let display_bounds = handle_app_error!(video_subsystem.display_bounds(0));
+    let display_bounds = handle_app_error!(
+        video_subsystem
+            .display_bounds(
+                sdl_context
+                    .mouse()
+                    .focused_window_id()
+                    .unwrap_or(0)
+                    as i32
+            )
+    );
 
     let default_font = handle_app_error!(ttf_context.load_font_from_rwops(
         handle_app_error!(RWops::from_bytes(include_bytes!("../assets/default_font.ttf"))),
@@ -44,18 +55,14 @@ fn main() {
 
     macro_rules! window {
         ([$x:expr, $y:expr], [$width:expr, $height:expr]) => {
-            video_subsystem
-                .window("r-menu", $width, $height)
-                .position($x, $y)
-                .borderless()
-                .always_on_top()
-                .build()
-        };
-    }
-
-    macro_rules! canvas {
-        ($window:expr) => {
-            $window
+            handle_app_error!(
+                video_subsystem
+                    .window("r-menu", $width, $height)
+                    .position($x, $y)
+                    .borderless()
+                    .always_on_top()
+                    .build()
+            )
                 .into_canvas()
                 .present_vsync()
                 .build()
@@ -65,13 +72,6 @@ fn main() {
 
     info!("Initialized SDL2 {}", sdl2_version());
 
-    let top_window_rect = Rect::new(
-        0,
-        -(display_bounds.height() as i32 / 2),
-        display_bounds.width(),
-        20
-    );
-
     let config = match Config::load() {
         Ok(config) => config,
         Err(err) => {
@@ -79,15 +79,16 @@ fn main() {
             // and this window is used to display a configuration error,
             // so the user doesn't need to checkout logs every time.
 
-            let window = handle_app_error!(window!(
-                [top_window_rect.x(), top_window_rect.y()],
-                [top_window_rect.width(), top_window_rect.height()]
+            // The window has similar properties to dmenu.
+
+            let mut canvas = handle_app_error!(window!(
+                [display_bounds.x(), display_bounds.y()],
+                [display_bounds.width(), 20]
             ));
 
             warn!("Error detected. Error window opened");
             error!("{err:#}");
 
-            let mut canvas = handle_app_error!(canvas!(window));
             let texture_creator = canvas.texture_creator();
             let error_text_surface = handle_app_error!(
                 default_font
@@ -128,38 +129,67 @@ fn main() {
         },
     };
 
-    // TODO: load default font in here and apply config
+    let font = config.font()
+        .unwrap_or(&default_font);
 
-    let window = handle_app_error!(window!(
-        [top_window_rect.x(), top_window_rect.y()],
-        [top_window_rect.width(), top_window_rect.height()]
+    let window_rect = {
+        let config_padding = config.padding();
+        let config_height = config.height();
+
+        let window_position = Vector2I::new(
+            display_bounds.x() + (config_padding.x() / 2.0) as i32,
+            match config.position() {
+                WindowPosition::Top => display_bounds.y() + (config_padding.y() / 2.0) as i32,
+                WindowPosition::Bottom => {
+                    display_bounds.y()
+                        + display_bounds.height() as i32
+                        - config_height as i32
+                        - (config_padding.y() / 2.0) as i32
+                }
+            },
+        );
+
+        let window_size = Vector2U::new(
+            display_bounds.width() - config_padding.x() as u32,
+            config_height as u32,
+        );
+
+        Rect::new(
+            window_position.x(),
+            window_position.y(),
+            window_size.x(),
+            window_size.y()
+        )
+    };
+
+    let mut canvas = handle_app_error!(window!(
+        [window_rect.x(), window_rect.y()],
+        [window_rect.width(), window_rect.height()]
     ));
 
-    info!("Started window, requested: {top_window_rect:?}");
-
-    let mut canvas = handle_app_error!(canvas!(window));
+    info!("Started window, requested: {window_rect:?}");
 
     let texture_creator = canvas.texture_creator();
 
-    let mut input = TextInput::new(&default_font);
-    input.set_color(Color::WHITE);
+    let mut input = TextInput::new(&font);
+    input.set_color(config.text_color());
     input.set_position(Vector2I::new(0, 0));
 
-    let minus_a_quarter_window = (top_window_rect.width() / 2) / 2;
+    let minus_a_quarter_window = (window_rect.width() / 2) / 2;
 
     let mut pager = Pager::new(
         handle_app_error!(get_path_programs())
             .into_iter()
             .collect(),
-        &default_font,
+        &font,
     );
     pager.set_position(Vector2I::new(minus_a_quarter_window as i32, 0));
     pager.set_size(Vector2U::new(
-        top_window_rect.width() - minus_a_quarter_window,
-        top_window_rect.height(),
+        window_rect.width() - minus_a_quarter_window,
+        window_rect.height(),
     ));
-    pager.set_text_color(Color::WHITE);
-    pager.set_select_color(Color::RGB(255, 165, 0));
+    pager.set_text_color(config.text_color());
+    pager.set_select_color(config.selection_color());
     handle_app_error!(pager.compute_text(""));
 
     let mut shift_pressed = false;
@@ -289,7 +319,7 @@ fn main() {
             }
         }
 
-        canvas.set_draw_color(Color::RGB(20, 20, 20));
+        canvas.set_draw_color(config.background_color());
         canvas.clear();
 
         handle_app_error!(input.draw(&mut canvas, &texture_creator));

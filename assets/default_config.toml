@@ -19,7 +19,7 @@ padding = [0, 0]
 #
 # The width is always 100% of the screen
 # you can modify it using the `padding.x` value.
-height = 6
+height = 20
 
 ## BAR COLORS
 

@@ -19,7 +19,7 @@ use super::types::{
     ConfigVector2,
     WindowPosition,
 };
-use crate::utils::font_context::ttf_context;
+use crate::utils::misc::ttf_context;
 use crate::utils::vector_matrix::Vector2F;
 
 #[derive(Error, Debug)]
