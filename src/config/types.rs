@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use sdl2::pixels::Color;
 use thiserror::Error;
 use toml_edit::Item as TomlItem;
@@ -207,20 +209,10 @@ impl TryFrom<TomlItem> for ConfigNumber {
     }
 }
 
-impl Into<f64> for ConfigNumber {
-    fn into(self) -> f64 {
-        self.0
-    }
-}
+impl Deref for ConfigNumber {
+    type Target = f64;
 
-impl ConfigString {
-    #[inline]
-    pub const fn new(value: String) -> Self {
-        Self(value)
-    }
-
-    #[inline]
-    pub fn as_str(&self) -> &str {
+    fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
@@ -236,8 +228,10 @@ impl TryFrom<TomlItem> for ConfigString {
     }
 }
 
-impl ToString for ConfigString {
-    fn to_string(&self) -> String {
-        self.0.clone()
+impl Deref for ConfigString {
+    type Target = String;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }

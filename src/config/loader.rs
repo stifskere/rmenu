@@ -2,10 +2,12 @@ use std::env::var;
 use std::fs::{read_to_string, write as fs_write};
 use std::io::Error as IoError;
 use std::path::Path;
+use std::u16;
 
 use log::{info, warn};
 use sdl2::pixels::Color;
-use sdl2::ttf::InitError as TTFInitError;
+use sdl2::rwops::RWops;
+use sdl2::ttf::{InitError as TTFInitError, Font};
 use thiserror::Error;
 use toml_edit::{DocumentMut, Item as TomlItem, TomlError};
 
@@ -17,6 +19,7 @@ use super::types::{
     ConfigVector2,
     WindowPosition,
 };
+use crate::utils::font_context::ttf_context;
 use crate::utils::vector_matrix::Vector2F;
 
 #[derive(Error, Debug)]
@@ -38,9 +41,14 @@ pub enum ConfigError {
 
     #[error("TTF init error: {0:#}")]
     TTFError(#[from] TTFInitError),
+
+    #[error("Font error ocurred: {message}")]
+    GenericFontError {
+        message: String
+    }
 }
 
-pub struct Config {
+pub struct Config<'f> {
     // Whether the window spawns
     // on top or on the bottom.
     position: WindowPosition,
@@ -64,16 +72,16 @@ pub struct Config {
     // completion right menu.
     selection_color: ConfigColor,
 
-    // The window rendering font path,
-    // the font must be read by the function
-    // user.
-    font_path: Option<ConfigString>,
+    // The font that will render
+    // all the text in the window.
+    font: Option<Font<'f, 'f>>,
 }
 
-impl Config {
+impl<'f> Config<'f> {
     pub fn load() -> Result<Self, ConfigError> {
         let string_config_path = var("RMENU_CONFIG_PATH")
             .unwrap_or("./.rmenu.toml".into());
+
         info!("Read 'RMENU_CONFIG_PATH', found value '{string_config_path}'");
 
         let config_path = Path::new(&string_config_path);
@@ -110,7 +118,7 @@ impl Config {
 
     #[inline]
     pub fn height(&self) -> f64 {
-        self.height.into()
+        *self.height
     }
 
     #[inline]
@@ -131,14 +139,14 @@ impl Config {
             .into()
     }
 
-    pub fn font_path(&self) -> Option<String> {
-        self.font_path
+    #[inline]
+    pub const fn font(&self) -> Option<&Font<'f, 'f>> {
+        self.font
             .as_ref()
-            .map(|s| s.to_string())
     }
 }
 
-impl TryFrom<DocumentMut> for Config {
+impl<'f> TryFrom<DocumentMut> for Config<'f> {
     type Error = ConfigError;
 
     fn try_from(value: DocumentMut) -> Result<Self, Self::Error> {
@@ -178,13 +186,32 @@ impl TryFrom<DocumentMut> for Config {
             selection_color: handle_value!(selection_color: ConfigColor | ConfigColor::new(102, 102, 102)),
             background_color: handle_value!(background_color: ConfigColor | ConfigColor::new(41, 41, 41)),
 
-            font_path: Some(
-                handle_value!(font_path: ConfigString | ConfigString::new(String::new())),
-            )
-            .take_if(|p| {
-                !p.as_str()
-                    .is_empty()
-            }),
+            font: if let Some(font_path) = handle_value!(font_path: ConfigString) {
+                Some({
+                    let ttf_context = ttf_context()?;
+                    let font_size = *handle_value!(font_size: ConfigNumber | ConfigNumber::new(14.0));
+
+                    {
+                        let font_path = Path::new(&*font_path);
+
+                        if !font_path.exists() {
+                            return Err(ConfigError::GenericFontError {
+                                message: "The font file does not exist.".to_string()
+                            });
+                        }
+                    }
+
+                    ttf_context
+                        .load_font_from_rwops(
+                            RWops::from_file(&*font_path, "")
+                                .map_err(|err| ConfigError::GenericFontError { message: err })?,
+                            font_size.clamp(0.0, u16::MAX as f64) as u16
+                        )
+                        .map_err(|err| ConfigError::GenericFontError{ message: err })?
+                })
+            } else {
+                None
+            },
         })
     }
 }

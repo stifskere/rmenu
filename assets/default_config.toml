@@ -36,17 +36,37 @@ text_color = 0xFFFFFF
 # The launcher entry selection color.
 selection_color = 0x666666
 
-## MISC CONFIGURATION
+## FONT CONFIGURATION
 
-# The application font, a system path, `$(pwd)` is the path
+# The application font, a system path, `./` is the path
 # from where you started the program.
 #
 # If starting the program from your window manager the path
 # will be usually $HOME.
 #
-# This will not error, it will default to the fallback
-# font instead, if you don't see your font loaded, start
-# the app from a terminal and read the logs for more information.
+# The path must exist and be available, if this is not
+# present a default font will be used instead.
 #
-# This is due to SDL2 litations on lifetimes.
-font_path = "./change_me.ttf"
+# BASH EXPANSION IS NOT AVAILABLE IN THIS STRING.
+# font_path = "./change_me.ttf"
+
+# The font size.
+#
+# This will define the size of all fonts in the program,
+# the autocomplete bar loads a dynamic number of entries
+# depending on the size 'x' so they all fit on screen.
+#
+# If you set a font too big you might see 0 entries
+# on the autocomplete menu or other undefined behavior.
+#
+# This gets clamped to u16::max and if decimal rounded
+# towards 0.
+font_size = 14
+
+
+# If you would like to see more configuration, please
+# open an issue or pull request at
+#
+# https://github.com/stifskere/rmenu
+#
+# Thanks for using r-menu.

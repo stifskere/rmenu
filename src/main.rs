@@ -65,8 +65,12 @@ fn main() {
 
     info!("Initialized SDL2 {}", sdl2_version());
 
-    let window_rect =
-        Rect::new(0, -(display_bounds.height() as i32 / 2), display_bounds.width(), 20);
+    let top_window_rect = Rect::new(
+        0,
+        -(display_bounds.height() as i32 / 2),
+        display_bounds.width(),
+        20
+    );
 
     let config = match Config::load() {
         Ok(config) => config,
@@ -76,8 +80,8 @@ fn main() {
             // so the user doesn't need to checkout logs every time.
 
             let window = handle_app_error!(window!(
-                [window_rect.x(), window_rect.y()],
-                [window_rect.width(), window_rect.height()]
+                [top_window_rect.x(), top_window_rect.y()],
+                [top_window_rect.width(), top_window_rect.height()]
             ));
 
             warn!("Error detected. Error window opened");
@@ -119,6 +123,7 @@ fn main() {
                 canvas.present();
             }
 
+            info!("See ya!");
             return;
         },
     };
@@ -126,11 +131,11 @@ fn main() {
     // TODO: load default font in here and apply config
 
     let window = handle_app_error!(window!(
-        [window_rect.x(), window_rect.y()],
-        [window_rect.width(), window_rect.height()]
+        [top_window_rect.x(), top_window_rect.y()],
+        [top_window_rect.width(), top_window_rect.height()]
     ));
 
-    info!("Started window, requested: {window_rect:?}");
+    info!("Started window, requested: {top_window_rect:?}");
 
     let mut canvas = handle_app_error!(canvas!(window));
 
@@ -140,7 +145,7 @@ fn main() {
     input.set_color(Color::WHITE);
     input.set_position(Vector2I::new(0, 0));
 
-    let minus_a_quarter_window = (window_rect.width() / 2) / 2;
+    let minus_a_quarter_window = (top_window_rect.width() / 2) / 2;
 
     let mut pager = Pager::new(
         handle_app_error!(get_path_programs())
@@ -150,8 +155,8 @@ fn main() {
     );
     pager.set_position(Vector2I::new(minus_a_quarter_window as i32, 0));
     pager.set_size(Vector2U::new(
-        window_rect.width() - minus_a_quarter_window,
-        window_rect.height(),
+        top_window_rect.width() - minus_a_quarter_window,
+        top_window_rect.height(),
     ));
     pager.set_text_color(Color::WHITE);
     pager.set_select_color(Color::RGB(255, 165, 0));
