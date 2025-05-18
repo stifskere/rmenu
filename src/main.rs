@@ -138,12 +138,12 @@ fn main() {
         .unwrap_or(&default_font);
 
     let window_rect = {
-        let config_padding = config.padding();
-        let config_height = config.height();
+        let config_padding = config.window_padding();
+        let config_height = config.window_height();
 
         let window_position = Vector2I::new(
             display_bounds.x() + (config_padding.x() / 2.0) as i32,
-            match config.position() {
+            match config.window_position() {
                 WindowPosition::Top => display_bounds.y() + (config_padding.y() / 2.0) as i32,
                 WindowPosition::Bottom => {
                     display_bounds.y()
@@ -194,7 +194,8 @@ fn main() {
         window_rect.height(),
     ));
     pager.set_text_color(config.text_color());
-    pager.set_select_color(config.selection_color());
+    pager.set_highlight_color(config.highlight_color());
+    pager.set_highlighted_text_color(config.highlighted_text_color());
     handle_app_error!(pager.compute_text(""));
 
     let mut shift_pressed = false;
@@ -222,7 +223,7 @@ fn main() {
                                 input.set_text(
                                     selected
                                         .item()
-                                        .get_original_text(),
+                                        .get_text(),
                                 );
                             }
                         }
@@ -237,12 +238,12 @@ fn main() {
                                     "Requesting to start '{}'",
                                     selected
                                         .item()
-                                        .get_original_text()
+                                        .get_text()
                                 );
                                 Command::new(
                                     selected
                                         .item()
-                                        .get_original_text(),
+                                        .get_text(),
                                 )
                             },
 
@@ -324,7 +325,7 @@ fn main() {
             }
         }
 
-        canvas.set_draw_color(config.background_color());
+        canvas.set_draw_color(config.window_background_color());
         canvas.clear();
 
         handle_app_error!(input.draw(&mut canvas, &texture_creator));

@@ -51,30 +51,30 @@ pub enum ConfigError {
 pub struct Config<'f> {
     // Whether the window spawns
     // on top or on the bottom.
-    position: WindowPosition,
+    window_position: WindowPosition,
 
     // The separation between window borders, x for
     // left/right and y for the closest border
     // depending on the set window position.
-    padding: ConfigVector2,
+    window_padding: Vector2F,
 
     // The launcher bar height.
-    height: ConfigNumber,
+    window_height: u32,
 
     // The whole window color.
-    background_color: ConfigColor,
+    window_background_color: Color,
 
     // The text color, arrows and completion are
     // that multiplied by 0.9.
-    text_color: ConfigColor,
+    text_color: Color,
 
     // The color of the cursor in the command
     // completion right menu.
-    selection_color: ConfigColor,
+    highlight_color: Color,
 
     // The selected text color, under highlight
     // the original color might opaque.
-    selected_text_color: ConfigColor,
+    highlighted_text_color: Color,
 
     // The font that will render
     // all the text in the window.
@@ -111,42 +111,38 @@ impl<'f> Config<'f> {
     }
 
     #[inline]
-    pub const fn position(&self) -> WindowPosition {
-        self.position
+    pub const fn window_position(&self) -> WindowPosition {
+        self.window_position
     }
 
     #[inline]
-    pub fn padding(&self) -> Vector2F {
-        self.padding.into()
+    pub const fn window_padding(&self) -> Vector2F {
+        self.window_padding
     }
 
     #[inline]
-    pub fn height(&self) -> f64 {
-        *self.height
+    pub const fn window_height(&self) -> u32 {
+        self.window_height
     }
 
     #[inline]
-    pub fn background_color(&self) -> Color {
-        self.background_color
-            .into()
+    pub const fn window_background_color(&self) -> Color {
+        self.window_background_color
     }
 
     #[inline]
-    pub fn selected_text_color(&self) -> Color {
-        self.selected_text_color
-            .into()
+    pub const fn highlighted_text_color(&self) -> Color {
+        self.highlighted_text_color
     }
 
     #[inline]
-    pub fn text_color(&self) -> Color {
+    pub const fn text_color(&self) -> Color {
         self.text_color
-            .into()
     }
 
     #[inline]
-    pub fn selection_color(&self) -> Color {
-        self.selection_color
-            .into()
+    pub const fn highlight_color(&self) -> Color {
+        self.highlight_color
     }
 
     #[inline]
@@ -188,14 +184,19 @@ impl<'f> TryFrom<DocumentMut> for Config<'f> {
         }
 
         Ok(Self {
-            position: handle_value!(position: WindowPosition | WindowPosition::Top),
-            padding: handle_value!(padding: ConfigVector2 | ConfigVector2::new(0.0, 0.0)),
-            height: handle_value!(height: ConfigNumber | ConfigNumber::new(6.0)),
+            window_position: handle_value!(window_position: WindowPosition | WindowPosition::Top),
+            window_padding: handle_value!(window_padding: ConfigVector2 | ConfigVector2::new(0.0, 0.0))
+                .into(),
+            window_height: *handle_value!(window_height: ConfigNumber | ConfigNumber::new(6.0)) as u32,
 
-            text_color: handle_value!(text_color: ConfigColor | ConfigColor::new(255, 255, 255)),
-            selection_color: handle_value!(selection_color: ConfigColor | ConfigColor::new(102, 102, 102)),
-            selected_text_color: handle_value!(selected_text_color: ConfigColor | ConfigColor::new(255, 255, 255)),
-            background_color: handle_value!(background_color: ConfigColor | ConfigColor::new(41, 41, 41)),
+            text_color: handle_value!(text_color: ConfigColor | ConfigColor::new(255, 255, 255))
+                .into(),
+            highlight_color: handle_value!(highlight_color: ConfigColor | ConfigColor::new(102, 102, 102))
+                .into(),
+            highlighted_text_color: handle_value!(highlighted_text_color: ConfigColor | ConfigColor::new(255, 255, 255))
+                .into(),
+            window_background_color: handle_value!(window_background_color: ConfigColor | ConfigColor::new(41, 41, 41))
+                .into(),
 
             font: if let Some(font_path) = handle_value!(font_path: ConfigString) {
                 Some({

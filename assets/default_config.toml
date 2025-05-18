@@ -4,41 +4,45 @@
 # or transparency, as the only responsability this program
 # has is to provide a launcher bar.
 
-## POSITIONS
+## WINDOW POSITION AND SIZE
 
 # The launcher position, top or bottom.
-position = "top"
+window_position = "top"
 
 # The launcher separation from the screen borders.
 #
 # The type is a vector represented as a matrix
 # or size 2 array [x, y].
-padding = [0, 0]
+window_padding = [0, 0]
 
 # The launcher window height.
 #
 # The width is always 100% of the screen
 # you can modify it using the `padding.x` value.
-height = 20
+window_height = 20
 
 
-## BAR COLORS
+## LAUNCHER COLORS
 
-# All the bar colors have the same type, you
+# All the colors have the same type, you
 # may use an array of size 3 ([r, g, b]) or
 # an hexadecimal value 0xRRGGBB.
 
-# The launcher background color.
-background_color = 0x292929
+# The window background color.
+window_background_color = 0x292929
 
-# The launcher general text color.
+# The rendered non highlighted text
+# color, unselected text and input text.
 text_color = 0xFFFFFF
 
-# The launcher entry selection color.
-selection_color = 0x666666
+# The program suggestion selected
+# entry color and other highlights.
+highlight_color = 0x666666
 
-# The launcher entry selection text color.
-selection_text_color = 0xFFFFFF
+# The text highlight color, since
+# normal text might be opaqued by
+# highlight.
+highlighted_text_color = 0xFFFFFF
 
 ## FONT CONFIGURATION
 

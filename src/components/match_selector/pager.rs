@@ -24,8 +24,8 @@ pub struct Pager<'f> {
     font: &'f Font<'f, 'f>,
     text_color: Color,
 
-    selected_text_color: Color,
-    select_color: Color,
+    highlight_color: Color,
+    highlighted_text_color: Color,
 
     rect: Rect,
 }
@@ -44,8 +44,8 @@ impl<'f> Pager<'f> {
             font,
             text_color: Color::WHITE,
 
-            selected_text_color: Color::WHITE,
-            select_color: Color::WHITE,
+            highlight_color: Color::WHITE,
+            highlighted_text_color: Color::WHITE,
 
             rect: Rect::new(0, 0, 0, 0),
         }
@@ -67,13 +67,15 @@ impl<'f> Pager<'f> {
 
         let mut x_offset = 0;
         let mut current_page = Vec::new();
-        for entry in &self.provided_entries {
-            if !entry.starts_with(text) {
+        for entry_text in &self.provided_entries {
+            if !entry_text.starts_with(text) {
                 continue;
             }
 
-            let mut entry = PagerItem::new(self.font, &entry, self.text_color)?;
-            let entry_size = entry.get_size();
+            let mut entry = PagerItem::new(&self.font);
+            entry.set_text(entry_text);
+
+            let entry_size = entry.get_size()?;
 
             if entry_size.x() + x_offset > self.rect.width() - RIGHT_PAD {
                 self.computed_entries
@@ -87,7 +89,9 @@ impl<'f> Pager<'f> {
                 LEFT_PAD + self.rect.x() + x_offset as i32,
                 self.rect.y(),
             ));
-            entry.set_selected_background(self.select_color);
+            entry.set_highlighted_text_color(self.highlighted_text_color);
+            entry.set_highlight_color(self.highlight_color);
+            entry.set_text_color(self.text_color);
             entry.set_padding(Vector2::new(20, 0));
             entry.set_height(self.rect.height());
 
@@ -139,6 +143,7 @@ impl<'f> Pager<'f> {
         &self.computed_entries
     }
 
+    #[inline]
     pub fn get_selected_entry(&self) -> Option<PagerCursor> {
         PagerCursor::from_instance(self)
     }
@@ -160,8 +165,8 @@ impl<'f> Pager<'f> {
     }
 
     #[inline]
-    pub fn set_select_color(&mut self, select_color: Color) {
-        self.select_color = select_color;
+    pub fn set_highlight_color(&mut self, select_color: Color) {
+        self.highlight_color = select_color;
     }
 
     #[inline]
@@ -181,8 +186,8 @@ impl<'f> Pager<'f> {
     }
 
     #[inline]
-    pub const fn set_selected_text_color(&mut self, color: Color) {
-        self.selected_text_color = color;
+    pub const fn set_highlighted_text_color(&mut self, color: Color) {
+        self.highlighted_text_color = color;
     }
 
     pub fn draw(&self, renderer: &mut Canvas<Window>) -> Result<(), GenericComponentError> {

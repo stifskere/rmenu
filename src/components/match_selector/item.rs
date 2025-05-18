@@ -1,7 +1,6 @@
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::render::Canvas;
-use sdl2::surface::Surface;
 use sdl2::ttf::Font;
 use sdl2::video::Window;
 
@@ -9,38 +8,34 @@ use crate::utils::errors::GenericComponentError;
 use crate::utils::vector_matrix::{Vector2, Vector2I, Vector2U};
 
 pub struct PagerItem<'f> {
-    text_surface: Surface<'f>,
-    original_text: String,
+    font: &'f Font<'f, 'f>,
+    text: String,
 
     height: u32,
     padding: Vector2I,
 
-    selected_background: Color,
-    selected_text_color: Color,
+    text_color: Color,
+    highlight_color: Color,
+    highlighted_text_color: Color,
 
     position: Vector2I,
 }
 
 impl<'f> PagerItem<'f> {
-    pub(crate) fn new(
-        font: &'f Font,
-        text: &str,
-        color: Color,
-    ) -> Result<Self, GenericComponentError> {
-        Ok(Self {
-            text_surface: font
-                .render(text)
-                .blended(color)?,
-            original_text: text.to_string(),
+    pub(crate) fn new(font: &'f Font) -> Self {
+        Self {
+            font,
+            text: " ".into(),
 
             height: 0,
             padding: Vector2::new(0, 0),
 
-            selected_background: Color::BLUE,
-            selected_text_color: Color::WHITE,
+            text_color: Color::WHITE,
+            highlight_color: Color::BLUE,
+            highlighted_text_color: Color::WHITE,
 
             position: Vector2::new(0, 0),
-        })
+        }
     }
 
     #[inline]
@@ -52,8 +47,8 @@ impl<'f> PagerItem<'f> {
     }
 
     #[inline]
-    pub const fn set_selected_background(&mut self, color: Color) {
-        self.selected_background = color;
+    pub const fn set_highlight_color(&mut self, color: Color) {
+        self.highlight_color = color;
     }
 
 
@@ -68,20 +63,32 @@ impl<'f> PagerItem<'f> {
     }
 
     #[inline]
-    pub fn get_original_text(&self) -> &str {
-        &self.original_text
+    pub fn set_text(&mut self, text: &str) {
+        self.text = text.to_string();
     }
 
     #[inline]
-    pub const fn set_selected_text_color(&mut self, color: Color) {
-        self.selected_text_color = color;
+    pub const fn set_text_color(&mut self, color: Color) {
+        self.text_color = color;
     }
 
     #[inline]
-    pub fn get_size(&self) -> Vector2U {
-        self.text_surface
-            .size()
-            .into()
+    pub fn get_text(&self) -> &str {
+        &self.text
+    }
+
+    #[inline]
+    pub const fn set_highlighted_text_color(&mut self, color: Color) {
+        self.highlighted_text_color = color;
+    }
+
+    #[inline]
+    pub fn get_size(&mut self) -> Result<Vector2U, GenericComponentError> {
+        Ok(
+            self.font
+                .size_of(&self.text)
+                .map(|s| s.into())?
+        )
     }
 
     pub fn draw(
@@ -90,20 +97,20 @@ impl<'f> PagerItem<'f> {
         selected: bool,
     ) -> Result<(), GenericComponentError> {
         let texture_creator = renderer.texture_creator();
-        let texture = texture_creator.create_texture_from_surface(&self.text_surface)?;
+        let text_surface = self.font.render(&self.text)
+            .blended(if selected { self.highlighted_text_color } else { self.text_color })?;
+        let texture = texture_creator.create_texture_from_surface(&text_surface)?;
 
         if selected {
             let prev_draw_color = renderer.draw_color();
-            renderer.set_draw_color(self.selected_background);
+            renderer.set_draw_color(self.highlight_color);
 
             renderer.fill_rect(Rect::new(
                 self.position.x(),
                 self.position.y(),
-                self.text_surface
-                    .width()
+                text_surface.width()
                     + self.padding.x() as u32,
-                self.text_surface
-                    .height()
+                text_surface.height()
                     + self.padding.y() as u32
                     + self.height,
             ))?;
@@ -115,15 +122,14 @@ impl<'f> PagerItem<'f> {
             &texture,
             None,
             Some(Rect::new(
-                self.position.x() + self.padding.x() / 2,
+                self.position.x() 
+                    + self.padding.x() / 2,
                 self.position.y()
                     + self.padding.y() / 2
                     + (self.height / 2) as i32
-                    - (self.text_surface.height() / 2) as i32,
-                self.text_surface
-                    .width(),
-                self.text_surface
-                    .height(),
+                    - (text_surface.height() / 2) as i32,
+                text_surface.width(),
+                text_surface.height(),
             )),
         )?;
 
