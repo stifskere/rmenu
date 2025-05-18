@@ -127,6 +127,7 @@ impl TryFrom<TomlItem> for ConfigVector2 {
 }
 
 impl Into<Vector2F> for ConfigVector2 {
+    #[inline]
     fn into(self) -> Vector2F {
         Vector2::new(self.x as f32, self.y as f32)
     }
@@ -183,6 +184,7 @@ impl TryFrom<TomlItem> for ConfigColor {
 }
 
 impl Into<Color> for ConfigColor {
+    #[inline]
     fn into(self) -> Color {
         Color::RGB(self.r, self.g, self.b)
     }

@@ -72,6 +72,10 @@ pub struct Config<'f> {
     // completion right menu.
     selection_color: ConfigColor,
 
+    // The selected text color, under highlight
+    // the original color might opaque.
+    selected_text_color: ConfigColor,
+
     // The font that will render
     // all the text in the window.
     font: Option<Font<'f, 'f>>,
@@ -124,6 +128,12 @@ impl<'f> Config<'f> {
     #[inline]
     pub fn background_color(&self) -> Color {
         self.background_color
+            .into()
+    }
+
+    #[inline]
+    pub fn selected_text_color(&self) -> Color {
+        self.selected_text_color
             .into()
     }
 
@@ -184,6 +194,7 @@ impl<'f> TryFrom<DocumentMut> for Config<'f> {
 
             text_color: handle_value!(text_color: ConfigColor | ConfigColor::new(255, 255, 255)),
             selection_color: handle_value!(selection_color: ConfigColor | ConfigColor::new(102, 102, 102)),
+            selected_text_color: handle_value!(selected_text_color: ConfigColor | ConfigColor::new(255, 255, 255)),
             background_color: handle_value!(background_color: ConfigColor | ConfigColor::new(41, 41, 41)),
 
             font: if let Some(font_path) = handle_value!(font_path: ConfigString) {

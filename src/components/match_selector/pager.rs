@@ -24,6 +24,7 @@ pub struct Pager<'f> {
     font: &'f Font<'f, 'f>,
     text_color: Color,
 
+    selected_text_color: Color,
     select_color: Color,
 
     rect: Rect,
@@ -43,6 +44,7 @@ impl<'f> Pager<'f> {
             font,
             text_color: Color::WHITE,
 
+            selected_text_color: Color::WHITE,
             select_color: Color::WHITE,
 
             rect: Rect::new(0, 0, 0, 0),
@@ -76,6 +78,7 @@ impl<'f> Pager<'f> {
             if entry_size.x() + x_offset > self.rect.width() - RIGHT_PAD {
                 self.computed_entries
                     .push(current_page);
+
                 current_page = Vec::new();
                 x_offset = 0;
             }
@@ -86,6 +89,7 @@ impl<'f> Pager<'f> {
             ));
             entry.set_selected_background(self.select_color);
             entry.set_padding(Vector2::new(20, 0));
+            entry.set_height(self.rect.height());
 
             current_page.push(entry);
 
@@ -174,6 +178,11 @@ impl<'f> Pager<'f> {
             .set_width(size.x());
         self.rect
             .set_height(size.y());
+    }
+
+    #[inline]
+    pub const fn set_selected_text_color(&mut self, color: Color) {
+        self.selected_text_color = color;
     }
 
     pub fn draw(&self, renderer: &mut Canvas<Window>) -> Result<(), GenericComponentError> {

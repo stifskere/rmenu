@@ -14,9 +14,9 @@ use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::rect::Rect;
 use sdl2::rwops::RWops;
-use sdl2::ttf::init as ttf_init;
 use sdl2::version::version as sdl2_version;
 use utils::errors::handle_app_error;
+use utils::misc::ttf_context;
 use utils::vector_matrix::{Vector2I, Vector2U};
 
 mod completions;
@@ -34,18 +34,25 @@ fn main() {
     info!("Staring r-menu version {}", env!("CARGO_PKG_VERSION"));
 
     let sdl_context = handle_app_error!(sdl2_init());
-    let ttf_context = handle_app_error!(ttf_init());
+    let ttf_context = handle_app_error!(ttf_context());
 
+    info!("Initialized SDL2 {}", sdl2_version());
+
+    // TODO: find the screen id instead of the window id.
     let video_subsystem = handle_app_error!(sdl_context.video());
     let display_bounds = handle_app_error!(
         video_subsystem
-            .display_bounds(
-                sdl_context
+            .display_bounds({
+                let monitor_id = sdl_context
                     .mouse()
                     .focused_window_id()
                     .unwrap_or(0)
-                    as i32
-            )
+                    as i32;
+
+                info!("Detected monitor id {monitor_id}");
+
+                monitor_id
+            })
     );
 
     let default_font = handle_app_error!(ttf_context.load_font_from_rwops(
@@ -69,8 +76,6 @@ fn main() {
                 .map_err(|e| e.to_string())
         };
     }
-
-    info!("Initialized SDL2 {}", sdl2_version());
 
     let config = match Config::load() {
         Ok(config) => config,

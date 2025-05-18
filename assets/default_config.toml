@@ -21,6 +21,7 @@ padding = [0, 0]
 # you can modify it using the `padding.x` value.
 height = 20
 
+
 ## BAR COLORS
 
 # All the bar colors have the same type, you
@@ -35,6 +36,9 @@ text_color = 0xFFFFFF
 
 # The launcher entry selection color.
 selection_color = 0x666666
+
+# The launcher entry selection text color.
+selection_text_color = 0xFFFFFF
 
 ## FONT CONFIGURATION
 
