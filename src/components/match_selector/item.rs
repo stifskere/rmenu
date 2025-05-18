@@ -51,7 +51,6 @@ impl<'f> PagerItem<'f> {
         self.highlight_color = color;
     }
 
-
     #[inline]
     pub const fn set_height(&mut self, height: u32) {
         self.height = height;
@@ -84,11 +83,10 @@ impl<'f> PagerItem<'f> {
 
     #[inline]
     pub fn get_size(&mut self) -> Result<Vector2U, GenericComponentError> {
-        Ok(
-            self.font
-                .size_of(&self.text)
-                .map(|s| s.into())?
-        )
+        Ok(self
+            .font
+            .size_of(&self.text)
+            .map(|s| s.into())?)
     }
 
     pub fn draw(
@@ -97,7 +95,9 @@ impl<'f> PagerItem<'f> {
         selected: bool,
     ) -> Result<(), GenericComponentError> {
         let texture_creator = renderer.texture_creator();
-        let text_surface = self.font.render(&self.text)
+        let text_surface = self
+            .font
+            .render(&self.text)
             .blended(if selected { self.highlighted_text_color } else { self.text_color })?;
         let texture = texture_creator.create_texture_from_surface(&text_surface)?;
 
@@ -108,11 +108,8 @@ impl<'f> PagerItem<'f> {
             renderer.fill_rect(Rect::new(
                 self.position.x(),
                 self.position.y(),
-                text_surface.width()
-                    + self.padding.x() as u32,
-                text_surface.height()
-                    + self.padding.y() as u32
-                    + self.height,
+                text_surface.width() + self.padding.x() as u32,
+                text_surface.height() + self.padding.y() as u32 + self.height,
             ))?;
 
             renderer.set_draw_color(prev_draw_color);
@@ -122,11 +119,8 @@ impl<'f> PagerItem<'f> {
             &texture,
             None,
             Some(Rect::new(
-                self.position.x() 
-                    + self.padding.x() / 2,
-                self.position.y()
-                    + self.padding.y() / 2
-                    + (self.height / 2) as i32
+                self.position.x() + self.padding.x() / 2,
+                self.position.y() + self.padding.y() / 2 + (self.height / 2) as i32
                     - (text_surface.height() / 2) as i32,
                 text_surface.width(),
                 text_surface.height(),

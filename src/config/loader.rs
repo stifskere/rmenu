@@ -7,7 +7,7 @@ use std::u16;
 use log::{info, warn};
 use sdl2::pixels::Color;
 use sdl2::rwops::RWops;
-use sdl2::ttf::{InitError as TTFInitError, Font};
+use sdl2::ttf::{Font, InitError as TTFInitError};
 use thiserror::Error;
 use toml_edit::{DocumentMut, Item as TomlItem, TomlError};
 
@@ -43,9 +43,7 @@ pub enum ConfigError {
     TTFError(#[from] TTFInitError),
 
     #[error("Font error ocurred: {message}")]
-    GenericFontError {
-        message: String
-    }
+    GenericFontError { message: String },
 }
 
 pub struct Config<'f> {
@@ -83,8 +81,7 @@ pub struct Config<'f> {
 
 impl<'f> Config<'f> {
     pub fn load() -> Result<Self, ConfigError> {
-        let string_config_path = var("RMENU_CONFIG_PATH")
-            .unwrap_or("./.rmenu.toml".into());
+        let string_config_path = var("RMENU_CONFIG_PATH").unwrap_or("./.rmenu.toml".into());
 
         info!("Read 'RMENU_CONFIG_PATH', found value '{string_config_path}'");
 
@@ -147,8 +144,7 @@ impl<'f> Config<'f> {
 
     #[inline]
     pub const fn font(&self) -> Option<&Font<'f, 'f>> {
-        self.font
-            .as_ref()
+        self.font.as_ref()
     }
 }
 
@@ -185,30 +181,34 @@ impl<'f> TryFrom<DocumentMut> for Config<'f> {
 
         Ok(Self {
             window_position: handle_value!(window_position: WindowPosition | WindowPosition::Top),
-            window_padding: handle_value!(window_padding: ConfigVector2 | ConfigVector2::new(0.0, 0.0))
-                .into(),
-            window_height: *handle_value!(window_height: ConfigNumber | ConfigNumber::new(6.0)) as u32,
+            window_padding:
+                handle_value!(window_padding: ConfigVector2 | ConfigVector2::new(0.0, 0.0)).into(),
+            window_height: *handle_value!(window_height: ConfigNumber | ConfigNumber::new(6.0))
+                as u32,
 
             text_color: handle_value!(text_color: ConfigColor | ConfigColor::new(255, 255, 255))
                 .into(),
-            highlight_color: handle_value!(highlight_color: ConfigColor | ConfigColor::new(102, 102, 102))
-                .into(),
-            highlighted_text_color: handle_value!(highlighted_text_color: ConfigColor | ConfigColor::new(255, 255, 255))
-                .into(),
-            window_background_color: handle_value!(window_background_color: ConfigColor | ConfigColor::new(41, 41, 41))
-                .into(),
+            highlight_color:
+                handle_value!(highlight_color: ConfigColor | ConfigColor::new(102, 102, 102)).into(),
+            highlighted_text_color:
+                handle_value!(highlighted_text_color: ConfigColor | ConfigColor::new(255, 255, 255))
+                    .into(),
+            window_background_color:
+                handle_value!(window_background_color: ConfigColor | ConfigColor::new(41, 41, 41))
+                    .into(),
 
             font: if let Some(font_path) = handle_value!(font_path: ConfigString) {
                 Some({
                     let ttf_context = ttf_context()?;
-                    let font_size = *handle_value!(font_size: ConfigNumber | ConfigNumber::new(14.0));
+                    let font_size =
+                        *handle_value!(font_size: ConfigNumber | ConfigNumber::new(14.0));
 
                     {
                         let font_path = Path::new(&*font_path);
 
                         if !font_path.exists() {
                             return Err(ConfigError::GenericFontError {
-                                message: "The font file does not exist.".to_string()
+                                message: "The font file does not exist.".to_string(),
                             });
                         }
                     }
@@ -217,9 +217,9 @@ impl<'f> TryFrom<DocumentMut> for Config<'f> {
                         .load_font_from_rwops(
                             RWops::from_file(&*font_path, "")
                                 .map_err(|err| ConfigError::GenericFontError { message: err })?,
-                            font_size.clamp(0.0, u16::MAX as f64) as u16
+                            font_size.clamp(0.0, u16::MAX as f64) as u16,
                         )
-                        .map_err(|err| ConfigError::GenericFontError{ message: err })?
+                        .map_err(|err| ConfigError::GenericFontError { message: err })?
                 })
             } else {
                 None

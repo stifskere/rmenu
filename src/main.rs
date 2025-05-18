@@ -40,20 +40,16 @@ fn main() {
 
     // TODO: find the screen id instead of the window id.
     let video_subsystem = handle_app_error!(sdl_context.video());
-    let display_bounds = handle_app_error!(
-        video_subsystem
-            .display_bounds({
-                let monitor_id = sdl_context
-                    .mouse()
-                    .focused_window_id()
-                    .unwrap_or(0)
-                    as i32;
+    let display_bounds = handle_app_error!(video_subsystem.display_bounds({
+        let monitor_id = sdl_context
+            .mouse()
+            .focused_window_id()
+            .unwrap_or(0) as i32;
 
-                info!("Detected monitor id {monitor_id}");
+        info!("Detected monitor id {monitor_id}");
 
-                monitor_id
-            })
-    );
+        monitor_id
+    }));
 
     let default_font = handle_app_error!(ttf_context.load_font_from_rwops(
         handle_app_error!(RWops::from_bytes(include_bytes!("../assets/default_font.ttf"))),
@@ -70,10 +66,10 @@ fn main() {
                     .always_on_top()
                     .build()
             )
-                .into_canvas()
-                .present_vsync()
-                .build()
-                .map_err(|e| e.to_string())
+            .into_canvas()
+            .present_vsync()
+            .build()
+            .map_err(|e| e.to_string())
         };
     }
 
@@ -134,7 +130,8 @@ fn main() {
         },
     };
 
-    let font = config.font()
+    let font = config
+        .font()
         .unwrap_or(&default_font);
 
     let window_rect = {
@@ -146,25 +143,17 @@ fn main() {
             match config.window_position() {
                 WindowPosition::Top => display_bounds.y() + (config_padding.y() / 2.0) as i32,
                 WindowPosition::Bottom => {
-                    display_bounds.y()
-                        + display_bounds.height() as i32
+                    display_bounds.y() + display_bounds.height() as i32
                         - config_height as i32
                         - (config_padding.y() / 2.0) as i32
-                }
+                },
             },
         );
 
-        let window_size = Vector2U::new(
-            display_bounds.width() - config_padding.x() as u32,
-            config_height as u32,
-        );
+        let window_size =
+            Vector2U::new(display_bounds.width() - config_padding.x() as u32, config_height as u32);
 
-        Rect::new(
-            window_position.x(),
-            window_position.y(),
-            window_size.x(),
-            window_size.y()
-        )
+        Rect::new(window_position.x(), window_position.y(), window_size.x(), window_size.y())
     };
 
     let mut canvas = handle_app_error!(window!(

@@ -1,7 +1,6 @@
 use std::sync::OnceLock;
 
-use sdl2::ttf::{Sdl2TtfContext, init as ttf_init, InitError};
-
+use sdl2::ttf::{InitError, Sdl2TtfContext, init as ttf_init};
 
 static TTF_CONTEXT: OnceLock<Sdl2TtfContext> = OnceLock::new();
 
