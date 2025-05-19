@@ -55,3 +55,7 @@ tell you why the error happened, open an issue pasting the error and I'll see wh
 do.
 
 Happy hacking, or whatever JS devs say.
+
+## Licensing
+
+The project is subject to one or both licenses found in this repository at your choice.
