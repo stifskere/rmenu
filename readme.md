@@ -1,5 +1,8 @@
 # R-MENU
 
+![image](https://github.com/user-attachments/assets/2a430cd7-9b70-414d-bef3-fa9cb3927d88)
+![image](https://github.com/user-attachments/assets/c736b382-0667-4431-95c2-b686662fda0c)
+
 This is a **D-MENU RIIR**, rewritten in the **SDL2** rust bindings, with possibly some bugs.
 
 The project is usable but definitively not finished, and maintenance is not my priority
