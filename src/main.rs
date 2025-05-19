@@ -16,7 +16,7 @@ use sdl2::rect::Rect;
 use sdl2::rwops::RWops;
 use sdl2::version::version as sdl2_version;
 use utils::errors::handle_app_error;
-use utils::misc::ttf_context;
+use utils::misc::{find_mouse_monitor, ttf_context};
 use utils::vector_matrix::{Vector2I, Vector2U};
 
 mod completions;
@@ -41,10 +41,11 @@ fn main() {
     // TODO: find the screen id instead of the window id.
     let video_subsystem = handle_app_error!(sdl_context.video());
     let display_bounds = handle_app_error!(video_subsystem.display_bounds({
-        let monitor_id = sdl_context
-            .mouse()
-            .focused_window_id()
-            .unwrap_or(0) as i32;
+        let monitor_id =
+            handle_app_error!(find_mouse_monitor(&video_subsystem)).unwrap_or_else(|| {
+                warn!("Couldn't get which monitor the mouse is in, falling back to 0");
+                0
+            });
 
         info!("Detected monitor id {monitor_id}");
 
