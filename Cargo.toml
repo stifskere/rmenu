@@ -1,7 +1,8 @@
 [package]
-name = "r-menu"
+name = "rmenu"
 version = "0.1.0"
 edition = "2024"
+license = "MIT OR APACHE-2.0"
 
 [dependencies]
 flexi_logger = "0.30.1"

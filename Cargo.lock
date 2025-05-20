@@ -219,17 +219,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "r-menu"
-version = "0.1.0"
-dependencies = [
- "flexi_logger",
- "log",
- "sdl2",
- "thiserror",
- "toml_edit",
-]
-
-[[package]]
 name = "regex"
 version = "1.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -257,6 +246,17 @@ name = "regex-syntax"
 version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
+
+[[package]]
+name = "rmenu"
+version = "0.1.0"
+dependencies = [
+ "flexi_logger",
+ "log",
+ "sdl2",
+ "thiserror",
+ "toml_edit",
+]
 
 [[package]]
 name = "rustversion"
