@@ -1,5 +1,5 @@
 use std::env::var;
-use std::fs::{read_to_string, write as fs_write};
+use std::fs::{create_dir_all, read_to_string, write as fs_write};
 use std::io::Error as IoError;
 use std::path::Path;
 use std::u16;
@@ -95,6 +95,12 @@ impl<'f> Config<'f> {
         }
 
         if !config_path.exists() {
+            if let Some(parent) = config_path.parent() {
+                if !parent.exists() {
+                    create_dir_all(parent)?;
+                }
+            }
+
             fs_write(config_path, include_str!("../../assets/default_config.toml"))?;
             warn!(
                 "A configuration file at '{string_config_path}' could not be found, it was \
